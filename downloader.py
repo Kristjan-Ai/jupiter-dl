@@ -28,4 +28,6 @@ def get_jupiter(jupiter_url):
          "--embed-subs",
          "--external-downloader", "aria2c",
          "--external-downloader-args", "-c -j 8 -x 8 -s 8 -k 2M",
+         "-o", "%(title)s.%(ext)s",
+         "--restrict-filenames",
          master])
