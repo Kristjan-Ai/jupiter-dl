@@ -3,7 +3,7 @@ from selenium.webdriver.firefox.options import Options
 import subprocess
 
 
-def get_jupiter(jupiter_url):
+def get_jupiter(jupiter_url, sys_argv):
     # Create a new instance of the Firefox driver in headless mode
     options = Options()
     options.add_argument("--headless")
@@ -20,14 +20,40 @@ def get_jupiter(jupiter_url):
     print(f"master = {master}")
     driver.quit()
 
-    subprocess.run(
-        ["yt-dlp",
-         "-f", "bv*+mergeall[vcodec=none]",
-         "--audio-multistreams",
-         "--convert-subs", "srt",
-         "--embed-subs",
-         "--external-downloader", "aria2c",
-         "--external-downloader-args", "-c -j 8 -x 8 -s 8 -k 2M",
-         "-o", "%(title)s.%(ext)s",
-         "--restrict-filenames",
-         master])
+    parts = jupiter_url.split("/")
+    last_part = parts[-1]
+
+    if sys_argv == "dl":
+        print("DL")
+        subprocess.run(
+            ["yt-dlp",
+             "-f", "bv*+mergeall[vcodec=none]",
+             "--audio-multistreams",
+             "--embed-subs",
+             "--external-downloader", "aria2c",
+             "--external-downloader-args", "-c -j 8 -x 8 -s 8 -k 2M",
+             "-o", f"{last_part}.%(ext)s",
+             "--restrict-filenames",
+             master])
+    elif sys_argv == "subs":
+        print("SUB")
+        subprocess.run(
+            ["yt-dlp",
+             "--write-subs",
+             "--skip-download",
+             "-o", f"{last_part}.%(ext)s",
+             "--restrict-filenames",
+             master])
+    elif sys_argv == "both":
+        print("BOTH")
+        subprocess.run(
+            ["yt-dlp",
+             "-f", "bv*+mergeall[vcodec=none]",
+             "--audio-multistreams",
+             "--write-subs",
+             "--embed-subs",
+             "--external-downloader", "aria2c",
+             "--external-downloader-args", "-c -j 8 -x 8 -s 8 -k 2M",
+             "-o", f"{last_part}.%(ext)s",
+             "--restrict-filenames",
+             master])
