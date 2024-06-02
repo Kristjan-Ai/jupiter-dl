@@ -81,7 +81,6 @@ def download_video(url, filename, sys_argv):
             "postprocessors":[{"key":"FFmpegMetadata"},{"key":"FFmpegEmbedSubtitle"}],
             "outtmpl": f"./downloads/{filename}.%(ext)s",
             "windowsfilenames":True,
-            "verbose":True,
             }
 #         subprocess.run(
 #             ["C:/bin/yt-dlp.exe",
@@ -120,47 +119,75 @@ def get_jupiter_series(jupiter_url, sys_argv):
     print(f"URL = {jupiter_url}")
     
     #Get JSON for episode links
-    page_id = jupiter_url.split("/")[-2]
+    page_id = jupiter_url.split("/")[3]
     for item in driver.requests:
         if f"https://services.err.ee/api/v2/vodContent/getContentPageData?contentId={page_id}" in item.url:
-            jupiter_url = item.url
-            print(f"DATA-URL = {jupiter_url}")
+            print(f"DATA-URL = {item.url}")
+            json_data = requests.get(item.url).json()
+            break
     
     #Get season and episode data from JSON
-    content = requests.get(jupiter_url).json()
-    seasons = content["data"]["seasonList"]["items"]
+    content = json_data["data"]["seasonList"]["items"]
+    seasons = {}
     print("\nAvailable seasons and episodes:")
     index = 0
-    for s in seasons:
+    for s in content:
         if "name" in s.keys():
             print("Season",s["name"])
+            season = s["name"]
         else:
             print("Season 1")
+            season = "1"
         if "active" in s.keys():
+            seasons[season] = s["contents"]
             string = ""
             for e in s["contents"]:
                 string+=f"{e["episode"]},"
             print("\tEpisodes:",string[0:-1])
-        #Get non-active season json
+        #Get non-active season json and add to current json
         else:
             page_id = s["firstContentId"]
             jupiter_url = f"https://jupiter.err.ee/{page_id}"
             driver.get(jupiter_url)
+            success = False
             for item in driver.requests:
                 if f"https://services.err.ee/api/v2/vodContent/getContentPageData?contentId={page_id}" in item.url:
-                    jupiter_url = item.url
-                    print(f"DATA-URL = {jupiter_url}")
-            seasons[index]["contents"] = requests.get(jupiter_url).json()["data"]["seasonList"]["items"][index]["contents"]
-            for e in seasons[index]["contents"]:
-                string+=f"{e["episode"]},"
-            print("\tEpisodes:",string[0:-1])
+                    print(f"DATA-URL = {item.url}")
+                    success = True
+                    json = requests.get(item.url).json()
+                    seasons[s["name"]] = json["data"]["seasonList"]["items"][index]["contents"]
+                    string = ""
+                    for e in seasons[s["name"]]:
+                        string+=f"{e["episode"]},"
+                    print("\tEpisodes:",string[0:-1])
+                    break
+            if not success:
+                print(f"Couldn't find season {s["name"]} json url")
         index+=1
-    
-    episodes = seasons[0]["contents"]
+    driver.quit()
+    #Get user choice
+    choice = {}
+    episodes = []
+    for s in seasons.keys():
+        choice[s] = input("Choose season "+s+" episodes (example: 1-2,5,7-8):").split(",")
+        
+    for s in choice.keys():
+        for c in choice[s]:
+            if "-" in c:
+                r = list(map(int,c.split("-")))
+                for e in seasons[s]:
+                    if e["episode"] in range(r[0],r[1]+1):
+                        episodes.append(seasons[s][e])
+            else:
+                episodes.append(seasons[s][int(c)])
     
     #Download every episode from season
     for item in episodes:
         print(f"URL={item["url"]}")
         url = item["url"]
         filename = url.split("/")[-1]+f"-S{item["season"]}E{item["episode"]}"
-#        download_video(url, filename, sys_argv)
+        print(filename)
+#        try:
+#            download_video(url, filename, sys_argv)
+#        except:
+#            print(f"ERROR downloading {filename}")

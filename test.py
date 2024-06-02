@@ -1,7 +1,7 @@
 import yt_dlp
 from json.encoder import JSONEncoder
 
-URL = "https://lasteekraan.err.ee/1609206455/kadunud-sokid"
+URL = "https://jupiter.err.ee/1038309/ehh-uhhuduur"
 
 # ℹ️ See help(yt_dlp.postprocessor.PostProcessor)
 class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
