@@ -1,3 +1,4 @@
+from conf import *
 from seleniumwire import webdriver
 from selenium.webdriver.firefox.options import Options
 import subprocess
@@ -40,7 +41,7 @@ def download_video(url, filename, sys_argv):
             "external_downloader":"aria2c",
             "external_downloader_args":"-c -j 8 -x 8 -s 8 -k 2M",
             "postprocessors":[{"key":"FFmpegMetadata"}],
-            "outtmpl": f"./downloads/{filename}.%(ext)s",
+            "outtmpl": f"{dl_dir}{filename}.%(ext)s",
             "windowsfilenames":True,
             }
 #         subprocess.run(
@@ -59,7 +60,7 @@ def download_video(url, filename, sys_argv):
         ydl_opts = {
             "writesubtitles":True,
             "skip_download":True,
-            "outtmpl": f"./downloads/{filename}.%(ext)s",
+            "outtmpl": f"{dl_dir}{filename}.%(ext)s",
             "windowsfilenames":True,
             }
 #         subprocess.run(
@@ -79,7 +80,7 @@ def download_video(url, filename, sys_argv):
             "external_downloader":"aria2c",
             "external_downloader_args":"-c -j 8 -x 8 -s 8 -k 2M",
             "postprocessors":[{"key":"FFmpegMetadata"},{"key":"FFmpegEmbedSubtitle"}],
-            "outtmpl": f"./downloads/{filename}.%(ext)s",
+            "outtmpl": f"{dl_dir}{filename}.%(ext)s",
             "windowsfilenames":True,
             }
 #         subprocess.run(
@@ -180,14 +181,14 @@ def get_jupiter_series(jupiter_url, sys_argv):
                     if e["episode"] in range(r[0],r[1]+1):
                         episodes.append(seasons[s][index])
                     index+=1
-            else:
+            elif c.isdecimal():
                 episodes.append(seasons[s][int(c)])
     
     #Download every episode from season
     for item in episodes:
         print(f"URL={item["url"]}")
         url = item["url"]
-        filename = url.split("/")[-1]+f"-S{item["season"]}E{item["episode"]}"
+        filename = f"S{item["season"]}E{item["episode"]} - "+url.split("/")[-1]
         print(filename)
         try:
             download_video(url, filename, sys_argv)
