@@ -175,9 +175,11 @@ def get_jupiter_series(jupiter_url, sys_argv):
         for c in choice[s]:
             if "-" in c:
                 r = list(map(int,c.split("-")))
+                index = 0
                 for e in seasons[s]:
                     if e["episode"] in range(r[0],r[1]+1):
-                        episodes.append(seasons[s][e])
+                        episodes.append(seasons[s][index])
+                    index+=1
             else:
                 episodes.append(seasons[s][int(c)])
     
@@ -187,7 +189,7 @@ def get_jupiter_series(jupiter_url, sys_argv):
         url = item["url"]
         filename = url.split("/")[-1]+f"-S{item["season"]}E{item["episode"]}"
         print(filename)
-#        try:
-#            download_video(url, filename, sys_argv)
-#        except:
-#            print(f"ERROR downloading {filename}")
+        try:
+            download_video(url, filename, sys_argv)
+        except Exception as e:
+            print(f"ERROR downloading {filename}")
