@@ -1,6 +1,7 @@
 from conf import *
 import requests
 import yt_dlp
+import traceback
 
 class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
     def run(self, info):
@@ -29,8 +30,9 @@ class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
             index+=1
         return [], info
 
-def download_video(url, filename, sys_argv):
-    if sys_argv == "dl":
+def download_video(url, filename, mode, path):
+    dl_path = (dl_dir if dl_dir[-1] == "/" else dl_dir + "/") + path
+    if mode == "dl":
         print("DL")
         ydl_opts = {
             "format":"bv*+mergeall[vcodec=none][protocol=m3u8_native]",
@@ -38,7 +40,7 @@ def download_video(url, filename, sys_argv):
             "external_downloader":"aria2c",
             "external_downloader_args":"-c -j 8 -x 8 -s 8 -k 2M",
             "postprocessors":[{"key":"FFmpegMetadata"}],
-            "outtmpl": f"{(dl_dir if dl_dir[-1] == "/" else dl_dir + "/")}{filename}.%(ext)s",
+            "outtmpl": f"{dl_path}{filename}.%(ext)s",
             "windowsfilenames":True,
             }
 #         subprocess.run(
@@ -52,12 +54,12 @@ def download_video(url, filename, sys_argv):
 #              "-o", f"{filename}.%(ext)s",
 #              "--restrict-filenames",
 #              url])
-    elif sys_argv == "subs":
+    elif mode == "subs":
         print("SUB")
         ydl_opts = {
             "writesubtitles":True,
             "skip_download":True,
-            "outtmpl": f"{(dl_dir if dl_dir[-1] == "/" else dl_dir + "/")}{filename}.%(ext)s",
+            "outtmpl": f"{dl_path}{filename}.%(ext)s",
             "windowsfilenames":True,
             }
 #         subprocess.run(
@@ -67,7 +69,7 @@ def download_video(url, filename, sys_argv):
 #              "-o", f"{filename}.%(ext)s",
 #              "--restrict-filenames",
 #              url])
-    elif sys_argv == "both":
+    elif mode == "both":
         print("BOTH")
         ydl_opts = {
             "format":"bv*+mergeall[vcodec=none][protocol=m3u8_native]",
@@ -77,7 +79,7 @@ def download_video(url, filename, sys_argv):
             "external_downloader":"aria2c",
             "external_downloader_args":"-c -j 8 -x 8 -s 8 -k 2M",
             "postprocessors":[{"key":"FFmpegMetadata"},{"key":"FFmpegEmbedSubtitle"}],
-            "outtmpl": f"{(dl_dir if dl_dir[-1] == "/" else dl_dir + "/")}{filename}.%(ext)s",
+            "outtmpl": f"{dl_path}{filename}.%(ext)s",
             "windowsfilenames":True,
             }
 #         subprocess.run(
@@ -97,11 +99,11 @@ def download_video(url, filename, sys_argv):
         ydl.add_post_processor(MyCustomPP(), when='pre_process')
         ydl.download([url])
         
-def get_jupiter_video(jupiter_url, sys_argv):
+def get_jupiter_video(jupiter_url, mode, path):
     filename = jupiter_url.split("/")[-1]
-    download_video(jupiter_url, filename, sys_argv)
+    download_video(jupiter_url, filename, mode, path)
         
-def get_jupiter_series(jupiter_url, sys_argv):
+def get_jupiter_series(jupiter_url, mode, path):
     print(f"URL = {jupiter_url}")
     #Get JSON for episode links
     page_id = jupiter_url.split("/")[3]
@@ -173,6 +175,6 @@ def get_jupiter_series(jupiter_url, sys_argv):
         filename = f"S{("0" if item["season"]<10 else "")}{item["season"]} E{("0" if item["episode"]<10 else "")}{item["episode"]} - "+url.split("/")[-1]
         print(filename)
         try:
-            download_video(url, filename, sys_argv)
-        except Exception as e:
-            print(f"ERROR downloading {filename}")
+            download_video(url, filename, mode, path)
+        except Exception:
+            print(traceback.format_exc())
