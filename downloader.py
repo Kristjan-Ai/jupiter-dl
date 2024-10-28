@@ -1,7 +1,4 @@
 from conf import *
-from seleniumwire import webdriver
-from selenium.webdriver.firefox.options import Options
-import subprocess
 import requests
 import yt_dlp
 
@@ -41,7 +38,7 @@ def download_video(url, filename, sys_argv):
             "external_downloader":"aria2c",
             "external_downloader_args":"-c -j 8 -x 8 -s 8 -k 2M",
             "postprocessors":[{"key":"FFmpegMetadata"}],
-            "outtmpl": f"{dl_dir}{filename}.%(ext)s",
+            "outtmpl": f"{(dl_dir if dl_dir[-1] == "/" else dl_dir + "/")}{filename}.%(ext)s",
             "windowsfilenames":True,
             }
 #         subprocess.run(
@@ -60,7 +57,7 @@ def download_video(url, filename, sys_argv):
         ydl_opts = {
             "writesubtitles":True,
             "skip_download":True,
-            "outtmpl": f"{dl_dir}{filename}.%(ext)s",
+            "outtmpl": f"{(dl_dir if dl_dir[-1] == "/" else dl_dir + "/")}{filename}.%(ext)s",
             "windowsfilenames":True,
             }
 #         subprocess.run(
@@ -80,7 +77,7 @@ def download_video(url, filename, sys_argv):
             "external_downloader":"aria2c",
             "external_downloader_args":"-c -j 8 -x 8 -s 8 -k 2M",
             "postprocessors":[{"key":"FFmpegMetadata"},{"key":"FFmpegEmbedSubtitle"}],
-            "outtmpl": f"{dl_dir}{filename}.%(ext)s",
+            "outtmpl": f"{(dl_dir if dl_dir[-1] == "/" else dl_dir + "/")}{filename}.%(ext)s",
             "windowsfilenames":True,
             }
 #         subprocess.run(
@@ -101,32 +98,15 @@ def download_video(url, filename, sys_argv):
         ydl.download([url])
         
 def get_jupiter_video(jupiter_url, sys_argv):
-    parts = jupiter_url.split("/")
-    last_part = parts[-1]
-    download_video(jupiter_url, last_part, sys_argv)
-
-        
+    filename = jupiter_url.split("/")[-1]
+    download_video(jupiter_url, filename, sys_argv)
         
 def get_jupiter_series(jupiter_url, sys_argv):
-    # Create a new instance of the Firefox driver in headless mode
-    options = Options()
-    options.add_argument("--headless")
-    driver = webdriver.Firefox(
-        options=options
-    )
-
-    # Go to the Jupiter link
-    driver.get(jupiter_url)
     print(f"URL = {jupiter_url}")
-    
     #Get JSON for episode links
     page_id = jupiter_url.split("/")[3]
-    for item in driver.requests:
-        if f"https://services.err.ee/api/v2/vodContent/getContentPageData?contentId={page_id}" in item.url:
-            print(f"DATA-URL = {item.url}")
-            json_data = requests.get(item.url).json()
-            break
-    
+    json_data = requests.get(f"https://services.err.ee/api/v2/vodContent/getContentPageData?contentId={page_id}").json()
+
     #Get season and episode data from JSON
     content = json_data["data"]["seasonList"]["items"]
     seasons = {}
@@ -145,32 +125,27 @@ def get_jupiter_series(jupiter_url, sys_argv):
             for e in s["contents"]:
                 string+=f"{e["episode"]},"
             print("\tEpisodes:",string[0:-1])
-        #Get non-active season json and add to current json
+        
         else:
+            #Get non-active season json
             page_id = s["firstContentId"]
-            jupiter_url = f"https://jupiter.err.ee/{page_id}"
-            driver.get(jupiter_url)
-            success = False
-            for item in driver.requests:
-                if f"https://services.err.ee/api/v2/vodContent/getContentPageData?contentId={page_id}" in item.url:
-                    print(f"DATA-URL = {item.url}")
-                    success = True
-                    json = requests.get(item.url).json()
-                    seasons[s["name"]] = json["data"]["seasonList"]["items"][index]["contents"]
-                    string = ""
-                    for e in seasons[s["name"]]:
-                        string+=f"{e["episode"]},"
-                    print("\tEpisodes:",string[0:-1])
-                    break
-            if not success:
-                print(f"Couldn't find season {s["name"]} json url")
+            data_url = f"https://services.err.ee/api/v2/vodContent/getContentPageData?contentId={page_id}"
+            #print(f"DATA-URL = {data_url}")
+            json = requests.get(data_url).json()
+            #Add season json to dictionary
+            seasons[s["name"]] = json["data"]["seasonList"]["items"][index]["contents"]
+            string = ""
+            for e in seasons[s["name"]]:
+                string+=f"{e["episode"]},"
+            print("\tEpisodes:",string[0:-1])
         index+=1
-    driver.quit()
+
     #Get user choice
     choice = {}
     episodes = []
+    print("Choose episodes by season to download (example: 1-2,5,7-8 or all or leave empty)")
     for s in seasons.keys():
-        choice[s] = input("Choose season "+s+" episodes (example: 1-2,5,7-8):").split(",")
+        choice[s] = input(f"Season {s} episodes:").split(",")
         
     for s in choice.keys():
         for c in choice[s]:
@@ -182,13 +157,20 @@ def get_jupiter_series(jupiter_url, sys_argv):
                         episodes.append(seasons[s][index])
                     index+=1
             elif c.isdecimal():
-                episodes.append(seasons[s][int(c)])
+                c = int(c)
+                episodes.append(seasons[s][(c-1 if c>0 else c)])
+            elif c == "all" or c == "kõik":
+                #yt-dlp won't download duplicates
+                episodes += seasons[s][:]
+                break
+            elif c != "":
+                print(f"ERROR Wrong format: {c}")
     
     #Download every episode from season
     for item in episodes:
-        print(f"URL={item["url"]}")
         url = item["url"]
-        filename = f"S{item["season"]}E{item["episode"]} - "+url.split("/")[-1]
+        print(f"URL = {url}")
+        filename = f"S{("0" if item["season"]<10 else "")}{item["season"]} E{("0" if item["episode"]<10 else "")}{item["episode"]} - "+url.split("/")[-1]
         print(filename)
         try:
             download_video(url, filename, sys_argv)
