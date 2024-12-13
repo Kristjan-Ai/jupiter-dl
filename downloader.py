@@ -159,8 +159,11 @@ def get_jupiter_series(jupiter_url, mode, path):
                         episodes.append(seasons[s][index])
                     index+=1
             elif c.isdecimal():
-                c = int(c)
-                episodes.append(seasons[s][(c-1 if c>0 else c)])
+                index = 0
+                for e in seasons[s]:
+                    if e["episode"] == c:
+                        episodes.append(seasons[s][index])
+                    index+=1
             elif c == "all" or c == "kõik":
                 #yt-dlp won't download duplicates
                 episodes += seasons[s][:]
