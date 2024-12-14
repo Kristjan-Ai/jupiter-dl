@@ -19,7 +19,7 @@ class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
             #Set video language to None
             if f["audio_ext"]=="none":
                 info['formats'][index]['language']="und"
-                print(f"\t {f["format"]} language set to und")
+                if debugging: print(f"\t {f["format"]} language set to und")
             #Replace language tag according to corrections dict
             elif "language" in fkeys:
                 flang = f["language"]
