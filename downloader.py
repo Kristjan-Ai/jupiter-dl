@@ -33,7 +33,7 @@ class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
 def download_video(url, filename, mode, path):
     dl_path = (dl_dir if dl_dir[-1] == "/" else dl_dir + "/") + path
     if mode == "dl":
-        print("DL")
+        if debugging: print("DL")
         ydl_opts = {
             "format":"bv*+mergeall[vcodec=none][protocol=m3u8_native]",
             "allow_multiple_audio_streams":True,
@@ -55,7 +55,7 @@ def download_video(url, filename, mode, path):
 #              "--restrict-filenames",
 #              url])
     elif mode == "subs":
-        print("SUB")
+        if debugging: print("SUB")
         ydl_opts = {
             "writesubtitles":True,
             "skip_download":True,
@@ -70,7 +70,7 @@ def download_video(url, filename, mode, path):
 #              "--restrict-filenames",
 #              url])
     elif mode == "both":
-        print("BOTH")
+        if debugging: print("BOTH")
         ydl_opts = {
             "format":"bv*+mergeall[vcodec=none][protocol=m3u8_native]",
             "allsubtitles":True,
@@ -174,10 +174,10 @@ def get_jupiter_series(jupiter_url, mode, path):
     #Download every episode from season
     for item in episodes:
         url = item["url"]
-        print(f"URL = {url}")
-        filename = f"S{("0" if item["season"]<10 else "")}{item["season"]} E{("0" if item["episode"]<10 else "")}{item["episode"]} - "+url.split("/")[-1]
+        if debugging: print(f"URL = {url}")
+        filename = f"S{("0" if item["season"]<10 else "")}{item["season"]} E{("0" if item["episode"]<10 else "")}{item["episode"]} - "+url.split("/")[-1].replace("-"," ")
         print(filename)
         try:
             download_video(url, filename, mode, path)
         except Exception:
-            print(traceback.format_exc())
+            if debugging: print(traceback.format_exc())
