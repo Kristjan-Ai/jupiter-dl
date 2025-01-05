@@ -99,11 +99,20 @@ def download_video(url, filename, mode, path):
         ydl.add_post_processor(MyCustomPP(), when='pre_process')
         ydl.download([url])
         
-def get_jupiter_video(jupiter_url, mode, path):
+def get_jupiter_video(jupiter_url, mode, path, debug):
+    if debug:
+        global debugging
+        debugging = True
     filename = jupiter_url.split("/")[-1]
-    download_video(jupiter_url, filename, mode, path)
-        
-def get_jupiter_series(jupiter_url, mode, path):
+    try:
+        download_video(jupiter_url, filename, mode, path)
+    except Exception:
+        if debugging: print(traceback.format_exc())
+   
+def get_jupiter_series(jupiter_url, mode, path, debug):
+    if debug:
+        global debugging
+        debugging = True
     print(f"URL = {jupiter_url}")
     #Get JSON for episode links
     page_id = jupiter_url.split("/")[3]
