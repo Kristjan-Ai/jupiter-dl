@@ -9,8 +9,9 @@ if __name__ == "__main__":
     parser.add_argument("-c", type=str, help="Choose parts of the media to download.  Default: both", default="both", choices=("video","subs","both"))
     parser.add_argument("-m", type=str, help="Choose download mode. \"single\" downloads only the video in the URL provided. \"series\" tries to find all available episodes.   Default: single", default="single", choices=("single","series"))
     parser.add_argument("--debugging", action="store_true", help="Prints additional information", default=False)
-    
+
     args = parser.parse_args()
+    if "err.ee" not in args.jupiter_url or not args.jupiter_url.isdecimal(): parser.error("Check URL or video ID")
     jupiter_url = args.jupiter_url
     mode = args.c
     dl_type = args.m

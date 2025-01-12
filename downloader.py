@@ -13,6 +13,7 @@ class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
             "nl":["et","Vaegnägijad"],
             "und":["und","Originaal"],
             }
+        if debugging: print(f"\t{corrections}")
         index = 0
         for f in info["formats"]:
             fkeys = f.keys()
@@ -24,9 +25,9 @@ class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
             elif "language" in fkeys:
                 flang = f["language"]
                 if flang in corrections.keys():
-                    print(f"\t{flang} -> {corrections[flang]}")
+                    if debugging: print(f"\t{flang} -> {corrections[flang]}")
                     info['formats'][index]['language']=corrections[flang][0]
-                    info['formats'][index]["title"]=corrections[flang][1]
+                    info['formats'][index]["title"]=corrections[flang][1] #Doesn't seem to work
             index+=1
         return [], info
 
