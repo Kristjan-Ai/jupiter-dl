@@ -1,4 +1,4 @@
-from conf import *
+from conf import debugging
 import requests
 import yt_dlp
 import traceback
@@ -31,12 +31,12 @@ class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
             index+=1
         return [], info
 
-def download_video(url, filename, mode, path):
-    dl_path = (dl_dir if dl_dir[-1] == "/" else dl_dir + "/") + path
-    if mode == "dl":
-        if debugging: print("DL")
+def download_video(url, filename, mode, dl_dir):
+    dl_path = dl_dir if dl_dir[-1] == "/" else dl_dir + "/"
+    if mode == "video":
+        if debugging: print("Only video")
         ydl_opts = {
-            "format":"bv*+mergeall[vcodec=none][protocol=m3u8_native]",
+            "format":"bv*[acodec=none]+mergeall[vcodec=none][protocol=http_dash_segments]",
             "allow_multiple_audio_streams":True,
             "external_downloader":"aria2c",
             "external_downloader_args":"-c -j 8 -x 8 -s 8 -k 2M",
@@ -73,7 +73,7 @@ def download_video(url, filename, mode, path):
     elif mode == "both":
         if debugging: print("BOTH")
         ydl_opts = {
-            "format":"bv*+mergeall[vcodec=none][protocol=m3u8_native]",
+            "format":"bv*[acodec=none]+mergeall[vcodec=none][protocol=http_dash_segments]",
             "allsubtitles":True,
             "writesubtitles":True,
             "allow_multiple_audio_streams":True,
@@ -104,13 +104,17 @@ def get_jupiter_video(jupiter_url, mode, path, debug):
     if debug:
         global debugging
         debugging = True
-    filename = jupiter_url.split("/")[-1]
+    #Get JSON for metadata
+    page_id = jupiter_url.split("/")[3]
+    json_data = requests.get(f"https://services.err.ee/api/v2/vodContent/getContentPageData?contentId={page_id}").json()
+    maincontent = json_data["data"]["mainContent"]
+    filename = f"{maincontent["originalTitle"] if maincontent["originalTitle"]!="" else maincontent["heading"]} ({maincontent["year"]})"
     try:
         download_video(jupiter_url, filename, mode, path)
     except Exception:
         if debugging: print(traceback.format_exc())
    
-def get_jupiter_series(jupiter_url, mode, path, debug):
+def get_jupiter_series(jupiter_url, mode, path, create_folder, debug):
     if debug:
         global debugging
         debugging = True
@@ -185,9 +189,9 @@ def get_jupiter_series(jupiter_url, mode, path, debug):
     for item in episodes:
         url = item["url"]
         if debugging: print(f"URL = {url}")
-        filename = f"S{("0" if item["season"]<10 else "")}{item["season"]} E{("0" if item["episode"]<10 else "")}{item["episode"]} - "+url.split("/")[-1].replace("-"," ")
+        filename = f"S{("0" if item["season"]<10 else "")}{item["season"]} E{("0" if item["episode"]<10 else "")}{item["episode"]} - "+item["subHeading"]
         print(filename)
         try:
-            download_video(url, filename, mode, path)
+            download_video(url, filename, mode, path+(item["heading"]+"/" if create_folder else ""))
         except Exception:
             if debugging: print(traceback.format_exc())
