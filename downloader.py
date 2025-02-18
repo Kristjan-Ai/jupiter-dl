@@ -175,7 +175,7 @@ def get_jupiter_series(jupiter_url, mode, path, create_folder, debug):
             elif c.isdecimal():
                 index = 0
                 for e in seasons[s]:
-                    if e["episode"] == c:
+                    if str(e["episode"]) == str(c):
                         episodes.append(seasons[s][index])
                     index+=1
             elif c == "all" or c == "kõik":
@@ -189,9 +189,12 @@ def get_jupiter_series(jupiter_url, mode, path, create_folder, debug):
     for item in episodes:
         url = item["url"]
         if debugging: print(f"URL = {url}")
-        filename = f"S{("0" if item["season"]<10 else "")}{item["season"]} E{("0" if item["episode"]<10 else "")}{item["episode"]} - "+item["subHeading"]
+        season_episode = f"S{("0" if item["season"]<10 else "")}{item["season"]} E{("0" if item["episode"]<10 else "")}{item["episode"]}"
+        title = item["subHeading"] if item["subHeading"]!="" else item["heading"]
+        filename = f"{season_episode} - {title}"
+        path += item["heading"]+"/" if create_folder else ""
         print(filename)
         try:
-            download_video(url, filename, mode, path+(item["heading"]+"/" if create_folder else ""))
+            download_video(url, filename, mode, path)
         except Exception:
             if debugging: print(traceback.format_exc())
