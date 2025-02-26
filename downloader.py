@@ -1,4 +1,5 @@
-from conf import debugging
+from conf import conf
+debugging = conf["debugging"]
 import requests
 import yt_dlp
 import traceback
@@ -100,7 +101,7 @@ def download_video(url, filename, mode, dl_dir):
         ydl.add_post_processor(MyCustomPP(), when='pre_process')
         ydl.download([url])
         
-def get_jupiter_video(jupiter_url, mode, path, debug):
+def get_jupiter_video(jupiter_url, mode, path, create_folder, debug):
     if debug:
         global debugging
         debugging = True
@@ -108,7 +109,9 @@ def get_jupiter_video(jupiter_url, mode, path, debug):
     page_id = jupiter_url.split("/")[3]
     json_data = requests.get(f"https://services.err.ee/api/v2/vodContent/getContentPageData?contentId={page_id}").json()
     maincontent = json_data["data"]["mainContent"]
-    filename = f"{maincontent["originalTitle"] if maincontent["originalTitle"]!="" else maincontent["heading"]} ({maincontent["year"]})"
+    title = maincontent["originalTitle"] if maincontent["originalTitle"]!="" else maincontent["heading"]
+    filename = f"{title} ({maincontent["year"]})"
+    path += filename+"/" if create_folder else ""
     try:
         download_video(jupiter_url, filename, mode, path)
     except Exception:
@@ -118,13 +121,18 @@ def get_jupiter_series(jupiter_url, mode, path, create_folder, debug):
     if debug:
         global debugging
         debugging = True
-    print(f"URL = {jupiter_url}")
     #Get JSON for episode links
     page_id = jupiter_url.split("/")[3]
     json_data = requests.get(f"https://services.err.ee/api/v2/vodContent/getContentPageData?contentId={page_id}").json()
+    series_title = json_data["data"]["mainContent"]["originalTitle"] if json_data["data"]["mainContent"]["originalTitle"]!="" else json_data["data"]["mainContent"]["heading"]
+    series_year = json_data["data"]["mainContent"]["year"]
 
     #Get season and episode data from JSON
-    content = json_data["data"]["seasonList"]["items"]
+    try:
+        content = json_data["data"]["seasonList"]["items"]
+    except:
+        print("ERROR: Could not find episodes. Is this a series?")
+        quit()
     seasons = {}
     print("\nAvailable seasons and episodes:")
     index = 0
@@ -190,9 +198,9 @@ def get_jupiter_series(jupiter_url, mode, path, create_folder, debug):
         url = item["url"]
         if debugging: print(f"URL = {url}")
         season_episode = f"S{("0" if item["season"]<10 else "")}{item["season"]} E{("0" if item["episode"]<10 else "")}{item["episode"]}"
-        title = item["subHeading"] if item["subHeading"]!="" else item["heading"]
+        title = item["subHeading"] if item["subHeading"]!="" else series_title
         filename = f"{season_episode} - {title}"
-        path += item["heading"]+"/" if create_folder else ""
+        path += f"{series_title} ({series_year})/" if create_folder else ""
         print(filename)
         try:
             download_video(url, filename, mode, path)
