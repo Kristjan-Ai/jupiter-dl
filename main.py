@@ -11,11 +11,10 @@ if __name__ == "__main__":
     parser.add_argument("-m", type=str, help="Choose download mode. \"single\" downloads only the video in the page provided. \"series\" tries to find all available episodes.   Default: single", default=conf["mode"], choices=("single","series"))
     parser.add_argument("--create_folder", action="store_true", help="Creates a folder for the downloaded files.", default=conf["create_folder"])
     parser.add_argument("--debugging", action="store_true", help="Prints additional information", default=conf["debug"])
-
     args = parser.parse_args()
     if "err.ee" not in args.jupiter_page:
         if not args.jupiter_page.isdecimal():
-            parser.error(f"Check URL or video ID: {args.jupiter-dl}")
+            parser.error(f"Check URL or video ID: {args.jupiter_page}")
         else:
             jupiter_url = f"https://err.ee/{args.jupiter_page}"
     else:
@@ -24,8 +23,7 @@ if __name__ == "__main__":
     mode = args.m
     path = args.p+args.s
     debug = args.debugging
-    if debug: print(f"parts = {parts}\nmode = {mode}\npath = {path}\ndebug = {debug}")
-    print(f"URL = {jupiter_url}")
+    if debug: print(f"jupiter_url = {jupiter_url}\nparts = {parts}\nmode = {mode}\npath = {path}\ndebug = {debug}")
     
     if mode == "single":
         get_jupiter_video(jupiter_url, parts, path, args.create_folder, debug)
