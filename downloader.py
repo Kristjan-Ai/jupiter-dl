@@ -32,8 +32,8 @@ class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
             index+=1
         return [], info
 
-def download_video(url, filename, mode, dl_dir):
-    dl_path = dl_dir if dl_dir[-1] == "/" else dl_dir + "/"
+def download_video(url, filename, mode, dl_path):
+    dl_path += "/" if dl_path[-1] != "/" else ""
     if mode == "video":
         if debugging: print("Only video")
         ydl_opts = {
@@ -194,13 +194,13 @@ def get_jupiter_series(jupiter_url, mode, path, create_folder, debug):
                 print(f"ERROR Wrong format: {c}")
     
     #Download every episode from season
+    path += f"{series_title} ({series_year})/" if create_folder else ""
     for item in episodes:
         url = item["url"]
         if debugging: print(f"URL = {url}")
         season_episode = f"S{("0" if item["season"]<10 else "")}{item["season"]} E{("0" if item["episode"]<10 else "")}{item["episode"]}"
         title = item["subHeading"] if item["subHeading"]!="" else series_title
         filename = f"{season_episode} - {title}"
-        path += f"{series_title} ({series_year})/" if create_folder else ""
         print(filename)
         try:
             download_video(url, filename, mode, path)
