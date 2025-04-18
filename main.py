@@ -11,6 +11,7 @@ if __name__ == "__main__":
     parser.add_argument("-m", type=str, help="Choose download mode. \"single\" downloads only the video in the page provided. \"series\" tries to find all available episodes.   Default: single", default=conf["mode"], choices=("single","series"))
     parser.add_argument("--create_folder", action="store_true", help="Creates a folder for the downloaded files.", default=conf["create_folder"])
     parser.add_argument("--debugging", action="store_true", help="Prints additional information", default=conf["debugging"])
+    parser.add_argument("--overwrite", action="store_true", help="Overwrites existing media files", default=conf["overwrite"])
     args = parser.parse_args()
     if "err.ee" not in args.jupiter_page:
         if not args.jupiter_page.isdecimal():
@@ -24,10 +25,17 @@ if __name__ == "__main__":
     path = args.p+args.s
     create_folder = args.create_folder
     debug = args.debugging
+    overwrite = args.overwrite
     if debug: 
-        print(f"jupiter_url = {jupiter_url}\nparts = {parts}\nmode = {mode}\npath = {path}\ncreate_folder = {create_folder}\ndebug = {debug}")
+        print(f"""jupiter_url = {jupiter_url}
+        parts = {parts}
+        mode = {mode}
+        path = {path}
+        create_folder = {create_folder}
+        debug = {debug}
+        overwrite = {overwrite}""")
     
     if mode == "single":
-        get_jupiter_video(jupiter_url, parts, path, create_folder, debug)
+        get_jupiter_video(jupiter_url, parts, path, create_folder, debug, overwrite)
     elif mode == "series":
-        get_jupiter_series(jupiter_url, parts, path, create_folder, debug)
+        get_jupiter_series(jupiter_url, parts, path, create_folder, debug, overwrite)

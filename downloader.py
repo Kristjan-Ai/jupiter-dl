@@ -32,7 +32,7 @@ class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
             index+=1
         return [], info
 
-def download_video(url, filename, mode, dl_path):
+def download_video(url, filename, mode, dl_path, overwrite):
     dl_path += "/" if dl_path[-1] != "/" else ""
     if mode == "video":
         if debugging: print("Only video")
@@ -44,6 +44,8 @@ def download_video(url, filename, mode, dl_path):
             "postprocessors":[{"key":"FFmpegMetadata"}],
             "outtmpl": f"{dl_path}{filename}.%(ext)s",
             "windowsfilenames":True,
+            "overwrites":overwrite,
+            "test":False,
             }
 #         subprocess.run(
 #             ["C:/bin/yt-dlp.exe",
@@ -63,6 +65,8 @@ def download_video(url, filename, mode, dl_path):
             "skip_download":True,
             "outtmpl": f"{dl_path}{filename}.%(ext)s",
             "windowsfilenames":True,
+            "overwrites":overwrite,
+            "test":False,
             }
 #         subprocess.run(
 #             ["C:/bin/yt-dlp.exe",
@@ -83,6 +87,8 @@ def download_video(url, filename, mode, dl_path):
             "postprocessors":[{"key":"FFmpegMetadata"},{"key":"FFmpegEmbedSubtitle"}],
             "outtmpl": f"{dl_path}{filename}.%(ext)s",
             "windowsfilenames":True,
+            "overwrites":overwrite,
+            "test":False,
             }
 #         subprocess.run(
 #             ["C:/bin/yt-dlp.exe",
@@ -101,7 +107,7 @@ def download_video(url, filename, mode, dl_path):
         ydl.add_post_processor(MyCustomPP(), when='pre_process')
         ydl.download([url])
         
-def get_jupiter_video(jupiter_url, mode, path, create_folder, debug):
+def get_jupiter_video(jupiter_url, mode, path, create_folder, debug, overwrite):
     if debug:
         global debugging
         debugging = True
@@ -113,11 +119,11 @@ def get_jupiter_video(jupiter_url, mode, path, create_folder, debug):
     filename = f"{title} ({maincontent["year"]})"
     path += filename+"/" if create_folder else ""
     try:
-        download_video(jupiter_url, filename, mode, path)
+        download_video(jupiter_url, filename, mode, path, overwrite)
     except Exception:
         if debugging: print(traceback.format_exc())
    
-def get_jupiter_series(jupiter_url, mode, path, create_folder, debug):
+def get_jupiter_series(jupiter_url, mode, path, create_folder, debug, overwrite):
     if debug:
         global debugging
         debugging = True
@@ -205,6 +211,6 @@ def get_jupiter_series(jupiter_url, mode, path, create_folder, debug):
         episode_path = path+f"Season {item["season"]}/" if create_folder else path
         print(filename)
         try:
-            download_video(url, filename, mode, episode_path)
+            download_video(url, filename, mode, episode_path, overwrite)
         except Exception:
             if debugging: print(traceback.format_exc())

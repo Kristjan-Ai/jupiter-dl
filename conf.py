@@ -1,5 +1,6 @@
 conf = {
 "dl_dir" : "./",
+"overwrite" : False,
 "debugging" : False,
 "create_folder" : True,
 "choice" : "both",
