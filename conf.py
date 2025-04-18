@@ -5,3 +5,7 @@ conf = {
 "choice" : "both",
 "mode" : "single",
 }
+#  Predefined paths for certain series/films by id
+#  Useful for series
+#  "id":"path"
+paths = {}

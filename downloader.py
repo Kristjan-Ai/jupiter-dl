@@ -1,4 +1,4 @@
-from conf import conf
+from conf import conf, paths
 debugging = conf["debugging"]
 import requests
 import yt_dlp
@@ -195,14 +195,16 @@ def get_jupiter_series(jupiter_url, mode, path, create_folder, debug):
     
     #Download every episode from season
     path += f"{series_title} ({series_year})/" if create_folder else ""
+    if page_id in paths.keys(): path = paths[page_id]
     for item in episodes:
         url = item["url"]
         if debugging: print(f"URL = {url}")
-        season_episode = f"S{("0" if item["season"]<10 else "")}{item["season"]} E{("0" if item["episode"]<10 else "")}{item["episode"]}"
+        season_episode = f"S{("0" if item["season"]<10 else "")}{item["season"]}E{("0" if item["episode"]<10 else "")}{item["episode"]}"
         title = item["subHeading"] if item["subHeading"]!="" else series_title
         filename = f"{season_episode} - {title}"
+        episode_path = path+f"Season {item["season"]}/" if create_folder else path
         print(filename)
         try:
-            download_video(url, filename, mode, path)
+            download_video(url, filename, mode, episode_path)
         except Exception:
             if debugging: print(traceback.format_exc())
