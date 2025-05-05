@@ -3,6 +3,7 @@ debugging = conf["debugging"]
 import requests
 import yt_dlp
 import traceback
+import re
 
 class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
     def run(self, info):
@@ -28,12 +29,13 @@ class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
                 if flang in corrections.keys():
                     if debugging: print(f"\t{flang} -> {corrections[flang]}")
                     info['formats'][index]['language']=corrections[flang][0]
-                    info['formats'][index]["title"]=corrections[flang][1] #Doesn't seem to work
+                    info['formats'][index]["title"]=corrections[flang][1] #Doesn't work
             index+=1
         return [], info
 
 def download_video(url, filename, mode, dl_path, overwrite):
-    dl_path += "/" if dl_path[-1] != "/" else ""
+    filename = re.sub(r'\/','-',  filename) #filenames shouldn't create folders / -> -
+    dl_path += "\/" if dl_path[-1] != "/" else ""
     if mode == "video":
         if debugging: print("Only video")
         ydl_opts = {

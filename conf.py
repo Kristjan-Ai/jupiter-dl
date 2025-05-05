@@ -7,6 +7,6 @@ conf = {
 "mode" : "single",
 }
 #  Predefined paths for certain series/films by id
-#  Useful for series
+#  Useful for setting series folders
 #  "id":"path"
 paths = {}
