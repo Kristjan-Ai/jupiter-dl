@@ -35,7 +35,7 @@ class MyCustomPP(yt_dlp.postprocessor.PostProcessor):
 
 def download_video(url, filename, mode, dl_path, overwrite):
     filename = re.sub(r'\/','-',  filename) #filenames shouldn't create folders / -> -
-    dl_path += "\/" if dl_path[-1] != "/" else ""
+    dl_path += "/" if dl_path[-1] != "/" else ""
     if mode == "video":
         if debugging: print("Only video")
         ydl_opts = {

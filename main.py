@@ -1,4 +1,8 @@
-from conf import conf
+try:
+    from conf import conf
+except:
+    print("Please rename default_conf.py to conf.py (or find yourself a config file)")
+    exit()
 from downloader import get_jupiter_video, get_jupiter_series
 import argparse
 
